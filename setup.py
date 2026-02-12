@@ -1,5 +1,4 @@
-"""Setup configuration for NovaTrack Analytics Pipeline."""
-
+﻿"""Setup configuration for NovaTrack Analytics Pipeline."""
 from setuptools import setup, find_packages
 
 setup(
@@ -14,7 +13,7 @@ setup(
         "requests>=2.31.0",
         "psycopg2-binary>=2.9.9",
         "pandas>=2.1.4",
-        "SQLAlchemy>=2.0.25",
+        "SQLAlchemy>=1.4,<2.0",  # Must be 1.4.x for Airflow 2.10.4
         "python-dotenv>=1.0.1",
     ],
 )

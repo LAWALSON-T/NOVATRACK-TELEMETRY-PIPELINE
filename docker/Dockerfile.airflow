@@ -2,11 +2,25 @@
 
 USER airflow
 
-# Install only essential packages
+# Install dependencies with compatible versions
 RUN pip install --no-cache-dir \
+    'SQLAlchemy>=1.4,<2.0' \
     apache-airflow-providers-postgres==5.13.0 \
+    dbt-core==1.7.8 \
+    dbt-postgres==1.7.8 \
     requests==2.31.0 \
     psycopg2-binary==2.9.9 \
-    pandas==2.1.4
+    pandas==2.1.4 \
+    python-dotenv==1.0.1 \
+    pydantic==2.5.3 \
+    structlog==24.1.0
+
+# Copy source code
+COPY --chown=airflow:root src/ /opt/airflow/src/
+COPY --chown=airflow:root setup.py /opt/airflow/setup.py
+
+# Install the package
+WORKDIR /opt/airflow
+RUN pip install -e .
 
 USER airflow
