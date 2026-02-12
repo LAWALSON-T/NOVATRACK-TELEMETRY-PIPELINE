@@ -401,14 +401,7 @@ flake8 src/ tests/
 mypy src/
 ```
 
-### Code Style
 
-This project follows:
-- **PEP 8** style guide
-- **Black** for code formatting (line length: 100)
-- **isort** for import sorting
-- **Type hints** for all functions
-- **Docstrings** in Google style
 
 ### Pre-commit Hooks
 
@@ -582,24 +575,4 @@ cat dbt_project/target/compiled/...
 - Ensure Docker Hub credentials are valid
 - Review test coverage requirements
 
-### Getting Help
 
-- **Issues:** GitHub Issues tracker
-- **Documentation:** `/docs` folder
-- **Team Chat:** Slack #data-engineering
-- **Email:** data-engineering@novatrack.com
-
-## 📝 License
-
-Copyright © 2024 NovaTrack Analytics. All rights reserved.
-
-## 👥 Contributors
-
-- Data Engineering Team @ NovaTrack Analytics
-- For contributions, see CONTRIBUTING.md
-
----
-
-**Last Updated:** February 2026  
-**Version:** 1.0.0  
-**Maintained by:** NovaTrack Data Engineering Team
