@@ -7,6 +7,8 @@
       POSTGRES_DB: novatrack
     ports:
       - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "novatrack_user"]
       interval: 5s
@@ -21,6 +23,8 @@
       POSTGRES_DB: airflow
     ports:
       - "5433:5432"
+    volumes:
+      - postgres-airflow-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 5s
@@ -40,10 +44,14 @@
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: admin
       _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ./src:/opt/airflow/src
+      - ./requirements.txt:/requirements.txt
     entrypoint: /bin/bash
     command:
       - -c
       - |
+        pip install -r /requirements.txt
         airflow db migrate
         airflow users create \
           --username admin \
@@ -72,9 +80,13 @@
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
+      - ./src:/opt/airflow/src
+      - ./dbt_project:/usr/app/dbt_project
+      - ./requirements.txt:/requirements.txt
     ports:
       - "8080:8080"
-    command: webserver
+    command: >
+      bash -c "pip install -r /requirements.txt && airflow webserver"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
@@ -99,7 +111,11 @@
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
-    command: scheduler
+      - ./src:/opt/airflow/src
+      - ./dbt_project:/usr/app/dbt_project
+      - ./requirements.txt:/requirements.txt
+    command: >
+      bash -c "pip install -r /requirements.txt && airflow scheduler"
     restart: always
 
 volumes:
