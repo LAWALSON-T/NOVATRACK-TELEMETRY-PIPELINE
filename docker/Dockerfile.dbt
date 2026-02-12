@@ -1,0 +1,39 @@
+# Start from Python 3.11
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DBT_PROFILES_DIR=/usr/app/dbt_project
+
+WORKDIR /usr/app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    postgresql-client \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dbt
+RUN pip install --no-cache-dir \
+    dbt-core==1.7.8 \
+    dbt-postgres==1.7.8
+
+# Copy dbt project
+COPY dbt_project/ /usr/app/dbt_project/
+
+WORKDIR /usr/app/dbt_project
+
+# Install dbt packages
+RUN dbt deps --profiles-dir .
+
+# Create non-root user
+RUN useradd -m -u 1000 dbtuser && \
+    chown -R dbtuser:dbtuser /usr/app
+
+USER dbtuser
+
+# Default command
+CMD ["dbt", "run", "--profiles-dir", ".", "--target", "prod"]

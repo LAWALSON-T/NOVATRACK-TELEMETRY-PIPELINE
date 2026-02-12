@@ -1,0 +1,12 @@
+﻿FROM apache/airflow:2.10.4-python3.11
+
+USER airflow
+
+# Install only essential packages
+RUN pip install --no-cache-dir \
+    apache-airflow-providers-postgres==5.13.0 \
+    requests==2.31.0 \
+    psycopg2-binary==2.9.9 \
+    pandas==2.1.4
+
+USER airflow

@@ -1,0 +1,56 @@
+version: 2
+
+# Define source tables (raw data)
+sources:
+  - name: raw
+    description: Raw telemetry data from API ingestion
+    database: "{{ env_var('POSTGRES_DB', 'novatrack') }}"
+    schema: public
+    tables:
+      - name: telemetry_events
+        description: Raw telemetry events table
+        columns:
+          - name: event_id
+            description: Unique event identifier
+            tests:
+              - unique
+              - not_null
+          - name: device_id
+            tests:
+              - not_null
+          - name: event_type
+            tests:
+              - not_null
+
+# Define models and tests
+models:
+  - name: stg_telemetry__raw
+    description: Staging model for cleaned telemetry data
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+      - name: event_type
+        tests:
+          - accepted_values:
+              values: ['page_view', 'button_click', 'api_call', 'error']
+
+  - name: fct_telemetry_metrics
+    description: Daily aggregated metrics
+    columns:
+      - name: metric_id
+        tests:
+          - unique
+          - not_null
+      - name: event_count
+        tests:
+          - not_null
+
+  - name: dim_devices
+    description: Device dimension table
+    columns:
+      - name: device_id
+        tests:
+          - unique
+          - not_null
