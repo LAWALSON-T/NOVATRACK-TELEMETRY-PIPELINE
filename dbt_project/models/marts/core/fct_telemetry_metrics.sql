@@ -1,4 +1,5 @@
 -- Fact table: Daily aggregated telemetry metrics
+-- Grain: One row per device per day per event type
 
 {{
     config(
@@ -7,23 +8,23 @@
     )
 }}
 
--- Get clean data from staging
 with telemetry_data as (
     select * from {{ ref('stg_telemetry__raw') }}
 ),
 
--- Aggregate by day, device, and event type
 daily_metrics as (
     select
-        -- Dimensions (what we're grouping by)
+        -- Dimensions (these define the grain - one row per unique combination)
         device_id,
         date(event_timestamp) as metric_date,
         event_type,
-        device_model,
-        os_version,
-        country,
         
-        -- Metrics (what we're measuring)
+        -- Get most frequent device attributes (handles device changes during day)
+        mode() within group (order by device_model) as device_model,
+        mode() within group (order by os_version) as os_version,
+        mode() within group (order by country) as country,
+        
+        -- Metrics (aggregations across all events for this device/date/type)
         count(*) as event_count,
         count(distinct session_id) as unique_sessions,
         count(distinct user_id) as unique_users,
@@ -32,7 +33,7 @@ daily_metrics as (
         min(event_timestamp) as first_event_time,
         max(event_timestamp) as last_event_time,
         
-        -- Duration metrics
+        -- Duration metrics (averages and totals)
         avg(duration_ms) as avg_duration_ms,
         sum(duration_ms) as total_duration_ms,
         
@@ -45,20 +46,32 @@ daily_metrics as (
         
     from telemetry_data
     
-    group by 1, 2, 3, 4, 5, 6
+    -- CRITICAL: Group by only the grain columns
+    group by device_id, metric_date, event_type
 ),
 
--- Add surrogate key
 final as (
     select
-        -- Generate unique ID for each row
-        {{ dbt_utils.generate_surrogate_key([
-            'device_id',
-            'metric_date',
-            'event_type'
-        ]) }} as metric_id,
+        -- Generate surrogate key from grain columns
+        MD5(device_id || '-' || metric_date::text || '-' || event_type) as metric_id,
         
-        *
+        -- All other columns
+        device_id,
+        metric_date,
+        event_type,
+        device_model,
+        os_version,
+        country,
+        event_count,
+        unique_sessions,
+        unique_users,
+        first_event_time,
+        last_event_time,
+        avg_duration_ms,
+        total_duration_ms,
+        avg_metric_value,
+        total_metric_value,
+        dbt_updated_at
         
     from daily_metrics
 )
