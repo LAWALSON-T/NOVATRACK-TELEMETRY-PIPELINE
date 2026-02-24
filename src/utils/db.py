@@ -5,10 +5,11 @@ Provides helper functions for database operations.
 """
 
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 import psycopg2
-from psycopg2.extensions import connection as Connection
 from psycopg2 import pool
+from psycopg2.extensions import connection as Connection
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def get_connection(
 
     Returns:
         PostgreSQL connection object.
-    
+
     Example:
         >>> conn = get_connection(
         ...     host="localhost",
@@ -60,17 +61,14 @@ def get_connection(
         raise
 
 
-def create_table_if_not_exists(
-    conn: Connection,
-    table_sql: str
-) -> None:
+def create_table_if_not_exists(conn: Connection, table_sql: str) -> None:
     """
     Create table if it doesn't exist.
 
     Args:
         conn: Database connection.
         table_sql: CREATE TABLE SQL statement.
-    
+
     Example:
         >>> conn = get_connection(...)
         >>> sql = '''
@@ -93,30 +91,27 @@ def create_table_if_not_exists(
         raise
 
 
-def execute_sql_file(
-    conn: Connection,
-    filepath: str
-) -> None:
+def execute_sql_file(conn: Connection, filepath: str) -> None:
     """
     Execute SQL statements from a file.
 
     Args:
         conn: Database connection.
         filepath: Path to SQL file.
-    
+
     Example:
         >>> conn = get_connection(...)
         >>> execute_sql_file(conn, "sql/init.sql")
     """
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             sql = f.read()
-        
+
         cursor = conn.cursor()
         cursor.execute(sql)
         conn.commit()
         cursor.close()
-        
+
         logger.info(f"Executed SQL file: {filepath}")
     except FileNotFoundError:
         logger.error(f"SQL file not found: {filepath}")
@@ -146,7 +141,7 @@ def test_connection(
 
     Returns:
         True if connection successful, False otherwise.
-    
+
     Example:
         >>> if test_connection("localhost", 5432, "db", "user", "pass"):
         ...     print("Connection OK")
@@ -167,10 +162,7 @@ def test_connection(
         return False
 
 
-def get_table_row_count(
-    conn: Connection,
-    table_name: str
-) -> int:
+def get_table_row_count(conn: Connection, table_name: str) -> int:
     """
     Get the number of rows in a table.
 
@@ -180,7 +172,7 @@ def get_table_row_count(
 
     Returns:
         Number of rows.
-    
+
     Example:
         >>> conn = get_connection(...)
         >>> count = get_table_row_count(conn, "telemetry_events")
@@ -198,9 +190,7 @@ def get_table_row_count(
 
 
 def get_table_columns(
-    conn: Connection,
-    table_name: str,
-    schema: str = "public"
+    conn: Connection, table_name: str, schema: str = "public"
 ) -> List[Dict[str, Any]]:
     """
     Get column information for a table.
@@ -212,7 +202,7 @@ def get_table_columns(
 
     Returns:
         List of dictionaries with column information.
-    
+
     Example:
         >>> conn = get_connection(...)
         >>> columns = get_table_columns(conn, "telemetry_events")
@@ -221,7 +211,8 @@ def get_table_columns(
     """
     try:
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT 
                 column_name,
                 data_type,
@@ -231,17 +222,16 @@ def get_table_columns(
             WHERE table_schema = %s
               AND table_name = %s
             ORDER BY ordinal_position
-        """, (schema, table_name))
-        
+        """,
+            (schema, table_name),
+        )
+
         columns = []
         for row in cursor.fetchall():
-            columns.append({
-                "name": row[0],
-                "type": row[1],
-                "nullable": row[2] == "YES",
-                "default": row[3]
-            })
-        
+            columns.append(
+                {"name": row[0], "type": row[1], "nullable": row[2] == "YES", "default": row[3]}
+            )
+
         cursor.close()
         return columns
     except psycopg2.Error as e:
@@ -253,9 +243,9 @@ def get_table_columns(
 class ConnectionPool:
     """
     Connection pool for reusing database connections.
-    
+
     Useful in production for better performance.
-    
+
     Example:
         >>> pool = ConnectionPool(
         ...     host="localhost",
@@ -266,19 +256,19 @@ class ConnectionPool:
         ...     minconn=2,
         ...     maxconn=10
         ... )
-        >>> 
+        >>>
         >>> # Get connection from pool
         >>> conn = pool.get_connection()
         >>> cursor = conn.cursor()
         >>> cursor.execute("SELECT * FROM events")
-        >>> 
+        >>>
         >>> # Return to pool (don't close!)
         >>> pool.return_connection(conn)
-        >>> 
+        >>>
         >>> # When done with pool
         >>> pool.close_all()
     """
-    
+
     def __init__(
         self,
         host: str,
@@ -300,15 +290,15 @@ class ConnectionPool:
             password=password,
         )
         logger.info(f"Connection pool created: {minconn}-{maxconn} connections")
-    
+
     def get_connection(self) -> Connection:
         """Get connection from pool."""
         return self.pool.getconn()
-    
+
     def return_connection(self, conn: Connection) -> None:
         """Return connection to pool."""
         self.pool.putconn(conn)
-    
+
     def close_all(self) -> None:
         """Close all connections in pool."""
         self.pool.closeall()

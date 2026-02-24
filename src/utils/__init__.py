@@ -1,7 +1,7 @@
 """Utility modules for NovaTrack pipeline."""
 
-from .logger import setup_logging, get_logger
 from .db import get_connection
+from .logger import get_logger, setup_logging
 
 __all__ = [
     "setup_logging",

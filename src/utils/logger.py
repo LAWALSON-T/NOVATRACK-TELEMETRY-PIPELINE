@@ -4,17 +4,17 @@ Logging utilities for NovaTrack pipeline.
 Provides structured JSON logging with proper configuration.
 """
 
+import json
 import logging
 import sys
-from typing import Optional
-import json
 from datetime import datetime
+from typing import Optional
 
 
 class JSONFormatter(logging.Formatter):
     """
     Custom JSON formatter for structured logging.
-    
+
     Converts log records to JSON format for easy parsing by
     log aggregation systems like ELK, Splunk, Datadog.
     """
@@ -60,7 +60,7 @@ def setup_logging(
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
         json_format: If True, use JSON formatting. Otherwise use standard format.
-    
+
     Example:
         >>> setup_logging(log_level="DEBUG", json_format=True)
         >>> logger = get_logger(__name__)
@@ -85,8 +85,7 @@ def setup_logging(
         formatter = JSONFormatter()
     else:
         formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
 
     console_handler.setFormatter(formatter)
@@ -108,7 +107,7 @@ def get_logger(name: str) -> logging.Logger:
 
     Returns:
         Logger instance.
-    
+
     Example:
         >>> logger = get_logger(__name__)
         >>> logger.info("Processing started")

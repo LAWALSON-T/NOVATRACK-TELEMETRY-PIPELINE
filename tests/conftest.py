@@ -1,8 +1,9 @@
 """Pytest configuration and fixtures."""
 
-import pytest
 import os
-from typing import Dict, Any
+from typing import Any, Dict
+
+import pytest
 
 # Set test environment variables
 os.environ.setdefault("POSTGRES_HOST", "localhost")
@@ -30,4 +31,5 @@ def sample_event() -> Dict[str, Any]:
 def test_config():
     """Test configuration."""
     from src.ingestion.config import Config
+
     return Config()
